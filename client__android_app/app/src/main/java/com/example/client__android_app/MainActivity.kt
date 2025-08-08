@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import com.example.client__android_app.ui.navigation.AppNavigation
 import com.example.client__android_app.ui.theme.ClientTheme
 import androidx.activity.ComponentActivity
+import com.example.client__android_app.data.db.AppDatabase
 import com.example.client__android_app.data.repository.SettingsRepository
 import com.example.client__android_app.data.repository.SettingsRepositoryImpl
 import com.example.client__android_app.ui.viewmodel.MainViewModel
@@ -21,8 +22,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Initialize Room Database and DAO
+        val database = AppDatabase.getDatabase(applicationContext)
+        val settingsDao = database.settingsDao()
+
         // Initialize dependencies
-        settingsRepository = SettingsRepositoryImpl(applicationContext)
+        settingsRepository = SettingsRepositoryImpl(settingsDao)
         mainViewModel = MainViewModel(settingsRepository)
 
         enableEdgeToEdge()

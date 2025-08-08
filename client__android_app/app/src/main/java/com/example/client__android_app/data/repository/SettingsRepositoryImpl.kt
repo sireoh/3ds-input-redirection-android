@@ -1,36 +1,36 @@
 package com.example.client__android_app.data.repository
 
-import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import android.util.Log
+import com.example.client__android_app.data.db.SettingsDao
+import com.example.client__android_app.data.model.SettingItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-// Define a Preferences DataStore instance at the top level of your Kotlin file
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
-
 class SettingsRepositoryImpl(
-    private val context: Context
+    private val settingsDao: SettingsDao // Inject the DAO
 ) : SettingsRepository {
 
-    private object PreferencesKeys {
-        val IP_ADDRESS = stringPreferencesKey("ip_address")
+    private companion object {
+        const val KEY_IP_ADDRESS = "ip_address"
     }
 
     override fun getIpAddress(): Flow<String> {
-        return context.dataStore.data
-            .map { preferences ->
-                // Default to an empty string if no IP address is stored
-                preferences[PreferencesKeys.IP_ADDRESS] ?: ""
-            }
+        Log.d("sireoh", "Room: Getting IP Address Flow")
+        return settingsDao.getSettingValue(KEY_IP_ADDRESS).map { ipValue ->
+            val ip = ipValue ?: "" // Default to empty string if not found
+            Log.d("sireoh", "Room: Mapping IP: $ip")
+            ip
+        }
     }
 
     override suspend fun saveIpAddress(ip: String) {
-        context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.IP_ADDRESS] = ip
+        Log.d("sireoh", "Room: saveIpAddress called with IP: $ip")
+        try {
+            val settingItem = SettingItem(key = KEY_IP_ADDRESS, value = ip)
+            settingsDao.insertSetting(settingItem)
+            Log.d("sireoh", "Room: successful save for IP: $ip")
+        } catch (e: Exception) {
+            Log.e("sireoh", "Room: Error saving IP", e)
         }
     }
 }
