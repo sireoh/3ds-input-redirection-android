@@ -9,14 +9,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.client__android_app.ui.components.IpAddressInput
 import com.example.client__android_app.ui.viewmodel.MainViewModel
 
 
 @Composable
 fun MainScreen(
-    viewModel: MainViewModel = hiltViewModel()
+    navController: NavController, viewModel: MainViewModel
 ) {
     val ipAddress: String by viewModel.ipAddress.collectAsState()
 

@@ -1,20 +1,14 @@
 package com.example.client__android_app.ui.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.client__android_app.data.repository.SettingsRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-@HiltViewModel
-class MainViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository
-) : ViewModel() {
+class MainViewModel(private val settingsRepository: SettingsRepository) : ViewModel() {
     private val _ipAddress = MutableStateFlow("")
     val ipAddress: StateFlow<String> = _ipAddress
 

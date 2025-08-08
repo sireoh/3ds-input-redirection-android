@@ -2,10 +2,6 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-
-    // Hilt
-    id("com.google.devtools.ksp") version "2.0.21-1.0.25"
-    id("com.google.dagger.hilt.android") version "2.56.2"
 }
 
 android {
@@ -55,12 +51,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-
-    // Hilt
-    implementation("com.google.dagger:hilt-android:2.56.2")
     implementation(libs.androidx.navigation.compose)
-    ksp("com.google.dagger:hilt-android-compiler:2.56.2")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.7")

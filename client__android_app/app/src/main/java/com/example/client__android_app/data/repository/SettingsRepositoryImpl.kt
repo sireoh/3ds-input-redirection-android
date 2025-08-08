@@ -6,18 +6,14 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
-import javax.inject.Singleton
 
 // Define a Preferences DataStore instance at the top level of your Kotlin file
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
-@Singleton // Good practice for repositories if they don't hold mutable state tied to a specific scope
-class SettingsRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+class SettingsRepositoryImpl(
+    private val context: Context
 ) : SettingsRepository {
 
     private object PreferencesKeys {
