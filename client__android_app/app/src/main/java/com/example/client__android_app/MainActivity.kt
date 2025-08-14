@@ -112,6 +112,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        inputRedirector?.stopSendingFrames()
         udpSender?.close()
     }
 }

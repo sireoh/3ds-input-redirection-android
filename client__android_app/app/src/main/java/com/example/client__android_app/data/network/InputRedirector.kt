@@ -3,57 +3,76 @@
 package com.example.client__android_app.data.network
 
 import android.view.KeyEvent
+import kotlinx.coroutines.*
 import kotlin.math.abs
 
 class InputRedirector(private val udpSender: UdpSender) {
 
-    // Buttons state (all released by default)
     private var hidPad = 0xFFF
-
-    // Analog stick values
     private var circleX = 0
     private var circleY = 0
 
     private val DEADZONE = 0.2f
 
-    /** Handle gamepad button press */
+    // Keep previous state to detect changes
+    private var lastHidPad = hidPad
+    private var lastCircleX = circleX
+    private var lastCircleY = circleY
+
+    private var job: Job? = null
+    private val frameRateMs = 16L // 60Hz polling
+
+    init {
+        startSendingFrames()
+    }
+
+    private fun startSendingFrames() {
+        job = CoroutineScope(Dispatchers.IO).launch {
+            while (isActive) {
+                if (hidPad != lastHidPad || circleX != lastCircleX || circleY != lastCircleY) {
+                    sendFrame()
+                    lastHidPad = hidPad
+                    lastCircleX = circleX
+                    lastCircleY = circleY
+                }
+                delay(frameRateMs)
+            }
+        }
+    }
+
+    fun stopSendingFrames() {
+        job?.cancel()
+        job = null
+    }
+
     fun onKeyDown(keyCode: Int): Boolean {
         BUTTON_MAP[keyCode]?.let { bit ->
             hidPad = hidPad and (1 shl bit).inv()
-            sendFrame()
             return true
         }
         return false
     }
 
-    /** Handle gamepad button release */
     fun onKeyUp(keyCode: Int): Boolean {
         BUTTON_MAP[keyCode]?.let { bit ->
             hidPad = hidPad or (1 shl bit)
-            sendFrame()
             return true
         }
         return false
     }
 
-    /** Handle joystick / analog stick movement */
     fun onMotion(lx: Float, ly: Float, rx: Float = 0f, ry: Float = 0f) {
         fun applyDeadzone(v: Float) = if (abs(v) < DEADZONE) 0f else v
 
-        // Scale to 16-bit signed int, invert Y like Qt
         circleX = (applyDeadzone(lx) * 32767f).toInt()
         circleY = (-applyDeadzone(ly) * 32767f).toInt()
-
-        sendFrame()
     }
 
-    /** Send the current state over UDP */
     private fun sendFrame() {
         udpSender.sendFrame(hidPad, circleX, circleY)
     }
 
     companion object {
-        /** Maps Android key codes to 3DS button bits */
         val BUTTON_MAP = mapOf(
             KeyEvent.KEYCODE_BUTTON_A to 0,
             KeyEvent.KEYCODE_BUTTON_B to 1,
