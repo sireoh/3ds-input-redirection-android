@@ -3,7 +3,6 @@
 package com.example.client__android_app.data.network
 
 import android.view.KeyEvent
-import android.util.Log
 
 class InputRedirector(private val udpSender: UdpSender) {
     private var hidPad = 0xFFF // Default all buttons released

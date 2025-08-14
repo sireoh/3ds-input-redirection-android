@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.InputDevice
 import android.view.KeyEvent
-import android.view.MotionEvent
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,39 +29,16 @@ import com.example.client__android_app.data.network.UdpSender
 import com.example.client__android_app.data.repository.SettingsRepository
 import com.example.client__android_app.data.repository.SettingsRepositoryImpl
 import com.example.client__android_app.ui.viewmodel.MainViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 class MainActivity : ComponentActivity() {
     private lateinit var settingsRepository: SettingsRepository
     private lateinit var mainViewModel: MainViewModel
-    private lateinit var usbManager: UsbManager
     private var udpSender: UdpSender? = null
     private var inputRedirector: InputRedirector? = null
-    private val usbReceiver = UsbReceiver()
-
-    companion object {
-        const val ACTION_USB_PERMISSION = "com.example.client__android_app.USB_PERMISSION"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Initialize USB Manager
-        usbManager = getSystemService(Context.USB_SERVICE) as UsbManager
-
-        // Register USB Receiver
-        val filter = IntentFilter(ACTION_USB_PERMISSION)
-        registerReceiver(
-            usbReceiver,
-            filter,
-            Context.RECEIVER_NOT_EXPORTED
-        )
 
         // Initialize Room Database and DAO
         val database = AppDatabase.getDatabase(applicationContext)
@@ -70,9 +46,6 @@ class MainActivity : ComponentActivity() {
         // Initialize dependencies
         settingsRepository = SettingsRepositoryImpl(database.settingsDao())
         mainViewModel = MainViewModel(settingsRepository)
-
-        // Check for connected USB devices
-        checkUsbDevices()
 
         // Initialize UDP components
         lifecycleScope.launch {
@@ -104,35 +77,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    private fun checkUsbDevices() {
-        usbManager.deviceList.values.forEach { device ->
-            if (isGameController(device)) {
-                Log.d("sireoh", "Controller found: ${device.deviceName}")
-                requestUsbPermission(device)
-            }
-        }
-    }
-
-    private fun isGameController(device: UsbDevice): Boolean {
-        // Common game controller vendor IDs
-        return (device.vendorId == 0x045E ||  // Microsoft
-                device.vendorId == 0x054C ||  // Sony
-                device.vendorId == 0x046D)    // Logitech
-    }
-
-    private fun requestUsbPermission(device: UsbDevice) {
-        val permissionIntent = PendingIntent.getBroadcast(
-            this, 0,
-            Intent(ACTION_USB_PERMISSION),
-            PendingIntent.FLAG_IMMUTABLE
-        )
-        usbManager.requestPermission(device, permissionIntent)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        unregisterReceiver(usbReceiver)
-    }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (event?.source?.and(InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
@@ -146,19 +90,5 @@ class MainActivity : ComponentActivity() {
             if (inputRedirector?.onKeyUp(keyCode) == true) return true
         }
         return super.onKeyUp(keyCode, event)
-    }
-
-    inner class UsbReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (ACTION_USB_PERMISSION == intent.action) {
-                val device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE, UsbDevice::class.java)
-                if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-                    Log.d("sireoh", "Permission granted for ${device?.deviceName}")
-                    // Controller is now ready to use
-                } else {
-                    Log.d("sireoh", "Permission denied for ${device?.deviceName}")
-                }
-            }
-        }
     }
 }
