@@ -7,6 +7,12 @@ import android.view.KeyEvent
 class InputRedirector(private val udpSender: UdpSender) {
     private var hidPad = 0xFFF // Default all buttons released
 
+    // Minimal analog stick values
+    private var circleX = 0
+    private var circleY = 0
+
+    private val DEADZONE = 0.2f
+
     fun onKeyDown(keyCode: Int): Boolean {
         BUTTON_MAP[keyCode]?.let { bit ->
             hidPad = hidPad and (1 shl bit).inv()
@@ -25,8 +31,16 @@ class InputRedirector(private val udpSender: UdpSender) {
         return false
     }
 
+    // Minimal MotionEvent handling for left stick
+    fun onMotion(lx: Float, ly: Float) {
+        fun applyDeadzone(v: Float) = if (kotlin.math.abs(v) < DEADZONE) 0f else v
+        circleX = (applyDeadzone(lx) * 32767f).toInt()
+        circleY = (-applyDeadzone(ly) * 32767f).toInt() // invert Y like Qt
+        sendFrame()
+    }
+
     private fun sendFrame() {
-        udpSender.sendFrame(hidPad = hidPad)
+        udpSender.sendFrame(hidPad, circleX, circleY)
     }
 
     companion object {

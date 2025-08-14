@@ -2,17 +2,11 @@
 
 package com.example.client__android_app
 
-import android.app.PendingIntent
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
-import android.hardware.usb.UsbDevice
-import android.hardware.usb.UsbManager
 import android.os.Bundle
 import android.util.Log
 import android.view.InputDevice
 import android.view.KeyEvent
+import android.view.MotionEvent
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,11 +46,11 @@ class MainActivity : ComponentActivity() {
             settingsRepository.getIpAddress().collect { ip ->
                 Log.d("sireoh", "IP Address changed to: '$ip'")
                 if (ip.isNotBlank()) {
-                    udpSender?.updateIp(ip) ?: run {
-                        Log.d("sireoh", "Creating new UdpSender with IP: $ip")
+                    if (udpSender == null) {
                         udpSender = UdpSender(ip)
                         inputRedirector = InputRedirector(udpSender!!)
-                        Log.d("sireoh", "InputRedirector created successfully")
+                    } else {
+                        udpSender?.updateIp(ip)
                     }
                 } else {
                     Log.w("sireoh", "IP address is blank!")
@@ -90,5 +84,25 @@ class MainActivity : ComponentActivity() {
             if (inputRedirector?.onKeyUp(keyCode) == true) return true
         }
         return super.onKeyUp(keyCode, event)
+    }
+
+    override fun onGenericMotionEvent(event: MotionEvent?): Boolean {
+        event ?: return super.onGenericMotionEvent(event)
+
+        if ((event.source and InputDevice.SOURCE_JOYSTICK) != 0 &&
+            event.action == MotionEvent.ACTION_MOVE) {
+            val lx = event.getAxisValue(MotionEvent.AXIS_X)
+            val ly = event.getAxisValue(MotionEvent.AXIS_Y)
+            inputRedirector?.onMotion(lx, ly)
+            return true
+        }
+
+        return super.onGenericMotionEvent(event)
+    }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        udpSender?.close()
     }
 }
