@@ -134,21 +134,6 @@ class MainActivity : ComponentActivity() {
         unregisterReceiver(usbReceiver)
     }
 
-    override fun onGenericMotionEvent(event: MotionEvent): Boolean {
-        if (event.source and InputDevice.SOURCE_JOYSTICK == InputDevice.SOURCE_JOYSTICK
-            && event.action == MotionEvent.ACTION_MOVE) {
-
-            val lx = event.getAxisValue(MotionEvent.AXIS_X)
-            val ly = -event.getAxisValue(MotionEvent.AXIS_Y) // Invert Y
-            val rx = event.getAxisValue(MotionEvent.AXIS_Z)
-            val ry = -event.getAxisValue(MotionEvent.AXIS_RZ) // Invert Y
-
-            inputRedirector?.setAxisValues(lx.toDouble(), ly.toDouble(), rx.toDouble(), ry.toDouble())
-            return true
-        }
-        return super.onGenericMotionEvent(event)
-    }
-
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (event?.source?.and(InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
             if (inputRedirector?.onKeyDown(keyCode) == true) return true
@@ -174,44 +159,6 @@ class MainActivity : ComponentActivity() {
                     Log.d("sireoh", "Permission denied for ${device?.deviceName}")
                 }
             }
-        }
-    }
-
-    // Testing
-    private fun testBasicUDP() {
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val socket = DatagramSocket()
-
-                // Send proper 16-byte packet like your app does
-                val buffer = ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN)
-                buffer.putInt(0xFFF) // Default HID pad
-                buffer.putInt(0x7ff7ff) // Default circle pad
-                buffer.putInt(0x80800081.toInt()) // Default CPP
-                buffer.putInt(0) // Interface buttons
-
-                val packet = DatagramPacket(
-                    buffer.array(),
-                    16,
-                    InetAddress.getByName("192.168.1.100"), // Replace with your actual server IP
-                    4950
-                )
-                socket.send(packet)
-                socket.close()
-                Log.d("sireoh", "Test UDP packet sent successfully")
-            } catch (e: Exception) {
-                Log.e("sireoh", "Test UDP failed", e)
-            }
-        }
-    }
-
-    fun testManualInput() {
-        Log.d("sireoh", "Manual test button pressed")
-        inputRedirector?.onKeyDown(KeyEvent.KEYCODE_BUTTON_A)
-        // Send release after 100ms
-        lifecycleScope.launch {
-            kotlinx.coroutines.delay(100)
-            inputRedirector?.onKeyUp(KeyEvent.KEYCODE_BUTTON_A)
         }
     }
 }

@@ -20,32 +20,18 @@ class UdpSender(private var ip: String, private val port: Int = 4950) {
         ip = newIp
     }
 
-    fun sendFrame(
-        hidPad: Int,
-        circlePadState: Int = 0x7ff7ff,
-        cppState: Int = 0x80800081.toInt(),
-        interfaceButtons: Int = 0
-    ) {
+    fun sendFrame(hidPad: Int) {
         scope.launch {
             try {
-                Log.d("sireoh", "UdpSender - Preparing to send to $ip:$port")
-
                 val buffer = ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN)
                 buffer.putInt(hidPad)
-                buffer.putInt(circlePadState)
-                buffer.putInt(cppState)
-                buffer.putInt(interfaceButtons)
+                buffer.putInt(0) // Circle pad (unused)
+                buffer.putInt(0) // CPP (unused)
+                buffer.putInt(0) // Interface buttons (unused)
 
                 val data = buffer.array()
                 val packet = DatagramPacket(data, data.size, InetAddress.getByName(ip), port)
                 socket.send(packet)
-
-                Log.d("sireoh", "UdpSender - Sent frame - " +
-                        "HID - ${hidPad.toString(16)}, " +
-                        "CirclePad - ${circlePadState.toString(16)}, " +
-                        "CPP - ${cppState.toString(16)}, " +
-                        "Interface - ${interfaceButtons.toString(16)}")
-                Log.d("sireoh", "UdpSender - Frame sent successfully to $ip")
             } catch (e: Exception) {
                 Log.e("sireoh", "UdpSender - Failed to send to $ip:$port", e)
             }
