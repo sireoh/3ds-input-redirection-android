@@ -5,13 +5,9 @@ import socket
 import struct
 import signal
 import sys
-from dotenv import load_dotenv
-
-# Load .env file
-load_dotenv()
 
 # IP, port 4950
-UDP_IP = os.environ["UDP_IP"]
+UDP_IP = "0.0.0.0"
 UDP_PORT = 4950
 
 # Create a UDP socket
