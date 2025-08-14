@@ -72,34 +72,43 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // ---- Gamepad buttons ----
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (event?.source?.and(InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
+        event ?: return super.onKeyDown(keyCode, event)
+        if ((event.source and InputDevice.SOURCE_GAMEPAD) != 0 ||
+            (event.source and InputDevice.SOURCE_JOYSTICK) != 0) {
             if (inputRedirector?.onKeyDown(keyCode) == true) return true
         }
         return super.onKeyDown(keyCode, event)
     }
 
     override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        if (event?.source?.and(InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD) {
+        event ?: return super.onKeyUp(keyCode, event)
+        if ((event.source and InputDevice.SOURCE_GAMEPAD) != 0 ||
+            (event.source and InputDevice.SOURCE_JOYSTICK) != 0) {
             if (inputRedirector?.onKeyUp(keyCode) == true) return true
         }
         return super.onKeyUp(keyCode, event)
     }
 
+    // ---- Joystick axes ----
     override fun onGenericMotionEvent(event: MotionEvent?): Boolean {
         event ?: return super.onGenericMotionEvent(event)
 
         if ((event.source and InputDevice.SOURCE_JOYSTICK) != 0 &&
             event.action == MotionEvent.ACTION_MOVE) {
+
             val lx = event.getAxisValue(MotionEvent.AXIS_X)
             val ly = event.getAxisValue(MotionEvent.AXIS_Y)
-            inputRedirector?.onMotion(lx, ly)
+            val rx = event.getAxisValue(MotionEvent.AXIS_Z)
+            val ry = event.getAxisValue(MotionEvent.AXIS_RZ)
+
+            inputRedirector?.onMotion(lx, ly, rx, ry)
             return true
         }
 
         return super.onGenericMotionEvent(event)
     }
-
 
     override fun onDestroy() {
         super.onDestroy()

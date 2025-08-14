@@ -13,17 +13,18 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class UdpSender(private var ip: String, private val port: Int = 4950) {
+
     private var socket: DatagramSocket = DatagramSocket()
     private val scope = CoroutineScope(Dispatchers.IO)
 
+    /** Update IP address and recreate socket if IP changed */
     fun updateIp(newIp: String) {
-        if (newIp == ip) return // no change, do nothing
-
+        if (newIp == ip) return // no change
         ip = newIp
-        // Recreate the socket to avoid sending to old IP
         recreateSocket()
     }
 
+    /** Close old socket and create a new one */
     private fun recreateSocket() {
         try {
             if (!socket.isClosed) socket.close()
@@ -34,6 +35,7 @@ class UdpSender(private var ip: String, private val port: Int = 4950) {
         Log.d("sireoh", "UdpSender socket reopened for IP: $ip")
     }
 
+    /** Send a frame with buttons and optional joystick axes */
     fun sendFrame(hidPad: Int, circleX: Int = 0, circleY: Int = 0) {
         scope.launch {
             try {
@@ -52,6 +54,7 @@ class UdpSender(private var ip: String, private val port: Int = 4950) {
         }
     }
 
+    /** Close the socket when the app stops */
     fun close() {
         try {
             if (!socket.isClosed) {
