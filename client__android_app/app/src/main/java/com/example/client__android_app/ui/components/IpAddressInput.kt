@@ -17,7 +17,8 @@ fun IpAddressInput(
     OutlinedTextField(
         value = ipAddress,
         onValueChange = onIpAddressChanged,
-        label = { Text("IP Address") },
+        label = { Text("IP Address \uD83D\uDCF6") },
+        placeholder = { Text("192.168.x.xx") },
         modifier = Modifier.fillMaxWidth(),
         keyboardOptions = KeyboardOptions.Default.copy(
             keyboardType = KeyboardType.Text,
